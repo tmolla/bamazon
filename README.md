@@ -9,10 +9,10 @@ There are three role a user can have.
     A supervisor can view data accross departments and create a new department.
 
 
-##How to use the application:
-Entering the command `node bamazonCustomer.js` at the command line will start the customer inteface.
+## How to use the application:
+* Entering the command `node bamazonCustomer.js` at the command line will start the customer inteface.
 ![GitHub Logo](/images/CustomerMenu.png)
-Entering the command `node bamazonManger.js` at the command line will start the manager interface.
+* Entering the command `node bamazonManger.js` at the command line will start the manager interface.
 ![GitHub Logo](/images/ManagerMenu.png)
-Entering the command `node bamaoznSupervisor.js` at the command line will start the Supervisor interface.
+* Entering the command `node bamaoznSupervisor.js` at the command line will start the Supervisor interface.
 ![GitHub Logo](/images/SupervisorMenu.png)
