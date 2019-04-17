@@ -1,0 +1,25 @@
+{
+  "name": "bamazon",
+  "version": "1.0.0",
+  "description": "Class Assignment",
+  "main": "bamazonCustomer.js",
+  "dependencies": {
+    "cli-table2": "^0.2.0",
+    "inquirer": "^6.3.1",
+    "mysql": "^2.16.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tmolla/bamazon.git"
+  },
+  "author": "Telahoun",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tmolla/bamazon/issues"
+  },
+  "homepage": "https://github.com/tmolla/bamazon#readme"
+}

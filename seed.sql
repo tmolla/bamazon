@@ -10,6 +10,12 @@ values
 ("Keyboard","Computer",109.56,48),
 ("Mouse","Computer",99.76,35),
 ("Educated","Book",14.99,175),
-("Salt","Book",12.89,200),
-("Shirt","Apparel",17.99,215),
-("Shoe","Apparel",150.25,312);
+("Salt","Book",12.89,200);
+
+INSERT INTO departments (department_name, over_head_costs) 
+VALUES 
+("Sport",177695.77), 
+("Grocery", 3739.50), 
+("Computer", 66234.09), 
+("Book", 24833), 
+("Apparel", 46618.89);
