@@ -1,20 +1,20 @@
+require("dotenv").config();
 var mysql = require("mysql");
 var inquirer = require("inquirer");
 var Table = require("cli-table2")
+var colors = require("colors")
 
 var connection = mysql.createConnection({
-    host:"localhost",
-    port:"3306",
-    user:"root",
-    password:"mysql$62",
-    database:"bamazon"
+    host: process.env.MYSQL_HOST,
+    port: process.env.MYSQL_PORT,
+    user: process.env.MYSQL_USER,
+    password: process.env.MYSQL_PASSWORD,
+    database: process.env.MYSQL_DATABASE
 });
 
 //check connection works
 connection.connect(function(err){
     if(err) throw err
-    console.log("Connection OK.")
-    //connection.end();
     displayMenuOptions();
 })
 
@@ -65,7 +65,6 @@ function viewProductsForSale(){
         if (err) throw err
         var table = new Table({
             head: ["Item id","product name","department name", "Price","Stock Quantity"]
-            //colWidths: [10,20,20,10,20]
         });
         var row = [];
         for (var i = 0; i < res.length; i++) {
@@ -87,9 +86,9 @@ function viewLowInventory() {
     var query = "SELECT * FROM products where stock_quantity < 5";
     connection.query(query, function(err, res) {
       if (err) throw err;
-      if (res.length < 1) console.log("No low inventory, all is good.")
+      if (res.length < 1) console.log("\nThere are no items with low inventory.\n".green)
       for (var i = 0; i < res.length; i++) {
-        console.log(res[i].product_name);
+        console.log("\n" + (res[i].product_name + " has only " + res[0].stock_quantity + " item(s) left!\n").toString().green);
       }
       displayMenuOptions();
     });
@@ -100,31 +99,46 @@ function addInventory() {
         {
             name: "item_id",
             type: "input",
-            message: "What is the item_Id of the product you would like to add? "
+            message: "What is the item_Id of the product you would like to add?",
+            validate: function(value){
+                var isValid = !(typeof value === "undefined") && (value.trim()!='') && (!isNaN(parseInt(value)));
+                return(isValid || "Please enter a valid item_id.")
+            }
         },
         {
             name:"quantity",
             type:"input",
             message: "How many units of the product would you like to add?",
             validate: function(value) {
-                return(!(isNaN(value)))
+                var isValid = !(typeof value === "undefined") && (value.trim()!='') && (!isNaN(parseInt(value)));
+                return(isValid || "Please enter a valid quantity.")
             }
         }
     ]).then(function(answer){
+        // if (answer.item_id.trim() =="" || answer.quantity.trim() == ""){
+        //     console.log("\nPlease provide require fields\n".red);
+        //     addInventory();
+        // } 
+        
         var query = "SELECT stock_quantity FROM products WHERE ? ";
         connection.query(query, {item_id:answer.item_id}, function(err, res){
             if (err) throw err;
-            var quantity = parseInt(res[0].stock_quantity) + parseInt(answer.quantity);
-            var query = "UPDATE products SET ? WHERE ? ";
-            connection.query(query, [{stock_quantity: quantity}, {item_id: answer.item_id}], function(err,res){
-                if (err) throw err;
-                console.log(res);
-                displayMenuOptions();
-            })
+            if (res.length == 0) {
+                console.log("\nInvalid Item_id. Please input a valid item_id and try again.\n".red);
+                addInventory();
+            }else {
+                var quantity = parseInt(res[0].stock_quantity) + parseInt(answer.quantity);
+                var query = "UPDATE products SET ? WHERE ? ";
+                connection.query(query, [{stock_quantity: quantity}, {item_id: answer.item_id}], function(err,res){
+                    if (err) throw err;
+                    console.log("\nInventory updated successfuly.\n".green)
+                    displayMenuOptions();
+                })
+            }
         })
+        
     })
 }
-
 
 function addNewProduct() {
     connection.query("SELECT department_name FROM departments",function(err, res){
@@ -133,12 +147,16 @@ function addNewProduct() {
         for (var i = 0; i < res.length; i++){
             arrDept.push(res[i].department_name)
         }
-        //console.log(res)
+        
         inquirer.prompt([
             {
                 name: "product_name",
                 type: "input",
-                message: "What is the product name you would like to add?"
+                message: "What is the product name you would like to add?",
+                validate: function(value) {
+                    var isValid = (value.trim().length > 0 && typeof value === 'string' && isNaN(value))
+                    return(isValid || "Please enter a valid product name.")
+                }
             },
             {
                 name: "department_name",
@@ -151,7 +169,7 @@ function addNewProduct() {
                 type: "input",
                 message: "What is the unit price for the product?",
                 validate: function(value) {
-                    return(!(isNaN(value)))
+                    return(!(isNaN(value.trim())))
                 }
             },
             {
@@ -159,11 +177,18 @@ function addNewProduct() {
                 type:"input",
                 message: "How many units of the product do you have?",
                 validate: function(value) {
-                    return(!(isNaN(value)))
+                    var isValid = !isNaN(value.trim());
+                    return (isValid || "Please enter a number")
                 }
             }
         ]).then(function(answer){
-            console.log(answer);
+            if (answer.product_name.trim() =="" || 
+                answer.quantity.trim() == "" || 
+                answer.department_name.trim() == "" || 
+                answer.price.trim() == ""){
+                    console.log("\nPlease provide require fields\n");
+                    promptCustomer();
+            } else{
             var query = "INSERT INTO products SET ? ";
             connection.query(query, 
                 {   
@@ -174,14 +199,16 @@ function addNewProduct() {
                 }, 
                 function(err,res){
                     if (err) throw err
-                    console.log(res);
+                    console.log("\nProduct added successfuly.\n".green)
                     displayMenuOptions();
             })
+        }
         })
     })
 }
 
 function exitMenu(){
-    console.log("\nThank you for using Bamazon, the worlds best online shoping Mall! \nGood bye!\n")
+    console.log("\nThank you for using Bamazon, the worlds best online shoping Mall!".green)
+    console.log("Good bye!\n".green)
     connection.end();
 }

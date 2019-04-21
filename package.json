@@ -5,6 +5,8 @@
   "main": "bamazonCustomer.js",
   "dependencies": {
     "cli-table2": "^0.2.0",
+    "colors": "^1.3.3",
+    "dotenv": "^7.0.0",
     "inquirer": "^6.3.1",
     "mysql": "^2.16.0"
   },
@@ -21,5 +23,6 @@
   "bugs": {
     "url": "https://github.com/tmolla/bamazon/issues"
   },
-  "homepage": "https://github.com/tmolla/bamazon#readme"
+  "homepage": "https://github.com/tmolla/bamazon#readme",
+  "keywords": []
 }

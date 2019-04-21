@@ -1,21 +1,21 @@
+require("dotenv").config();
 var mysql = require("mysql");
 var inquirer = require("inquirer");
 var Table = require("cli-table2")
+var colors = require("colors");
 
 var connection = mysql.createConnection({
-    host:"localhost",
-    port:"3306",
-    user:"root",
-    password:"mysql$62",
-    database:"bamazon"
+  host: process.env.MYSQL_HOST,
+  port: process.env.MYSQL_PORT,
+  user: process.env.MYSQL_USER,
+  password: process.env.MYSQL_PASSWORD,
+  database: process.env.MYSQL_DATABASE
 });
 
 //check connection works
 connection.connect(function(err){
-    if(err) throw err
-    console.log("Connection OK.")
-    //connection.end();
-    displayMenuOptions();
+  if(err) throw err
+  displayMenuOptions();
 })
 
 
@@ -49,13 +49,11 @@ function displayMenuOptions() {
 }
 
 function viewProductSalesByDeparatment(){
-    var data = [];
     var row = [];
     var query = "SELECT * FROM departments AS t1 " +
                 "INNER JOIN (SELECT department_name, SUM(price) AS product_sales " + 
                 "FROM products GROUP BY department_name) AS t2 " +
                 "ON t1.department_name = t2.department_name"
-   //var query = "SELECT *, product_sales - over_head_costs as total_profit FROM departments";
     connection.query(query, function(err, res){
         if (err) throw err
         var table = new Table({
@@ -82,11 +80,13 @@ function createNewDepartment() {
         {
             name: "department_name",
             type: "input",
-            message: "What is the department name you would like to create?"
+            message: "What is the department name you would like to create?",
+            validate: function(value) {
+              return(isNaN(value) && value.trim().length > 0 && typeof value === 'string')
+          }
         }
 
     ]).then(function(answer){
-        console.log(answer);
         var query = "INSERT INTO departments SET ? ";
         connection.query(query, 
             {   
@@ -95,13 +95,14 @@ function createNewDepartment() {
             }, 
             function(err,res){
                 if (err) throw err
-                console.log(res);
+                console.log("\nDeparatment added successfuly!\n".green);
                 displayMenuOptions();
         })
     })
 }
 
 function exitMenu(){
-    console.log("\nThank you for using Bamazon, the worlds best online shoping Mall! \nGood bye!\n")
+    console.log("\nThank you for using Bamazon, the worlds best online shoping Mall!".green);
+    console.log("Good bye!\n".green);
     connection.end();
 }

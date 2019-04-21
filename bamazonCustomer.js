@@ -1,20 +1,21 @@
+require("dotenv").config();
 var mysql = require("mysql");
 var inquirer = require("inquirer");
 var Table = require("cli-table2")
+var colors = require("colors")
+
 
 var connection = mysql.createConnection({
-    host:"localhost",
-    port:"3306",
-    user:"root",
-    password:"mysql$62",
-    database:"bamazon"
+    host: process.env.MYSQL_HOST,
+    port: process.env.MYSQL_PORT,
+    user: process.env.MYSQL_USER,
+    password: process.env.MYSQL_PASSWORD,
+    database: process.env.MYSQL_DATABASE
 });
 
 //check connection works
 connection.connect(function(err){
     if(err) throw err
-    console.log("Connection OK.")
-    //connection.end();
     displayProducts();
 })
 
@@ -25,7 +26,6 @@ function displayProducts(){
         if (err) throw err
         var table = new Table({
             head: ["Item id","product name","department name", "Price","Stock Quantity"]
-            //colWidths: [10,20,20,10,20]
         });
         var row = [];
         for (var i = 0; i < res.length; i++) {
@@ -58,29 +58,40 @@ function promptCustomer() {
             }
         }
     ]).then(function(answer){
-        //console.log(answer);
+        if (answer.item_id =="" || answer.quantity == ""){
+            console.log("\nPlease provide require fields\n".red);
+            promptCustomer();
+        } else{
         var query = "SELECT * FROM products WHERE ? ";
         connection.query(query, {item_id: answer.item_id}, function(err,res){
-            if (err) throw err
-            var quantity = res[0].stock_quantity;
-            var unitPrice = res[0].price;
-            var purchase_quantity = answer.quantity;
-            var product_sales = parseFloat(res[0].product_sales) + parseFloat(unitPrice) * parseFloat(purchase_quantity);
+            if (err) throw err //check for error
+            if (res.length == 0) {
+                console.log("\nInvalid item_id provided\n".red);
+                promptCustomer();
+            }
+            else {
+                var quantity = res[0].stock_quantity;
+                var unitPrice = res[0].price;
+                var purchase_quantity = answer.quantity;
+                var product_sales = parseFloat(res[0].product_sales) + parseFloat(unitPrice) * parseFloat(purchase_quantity);
 
-            if(parseInt(quantity) >= parseInt(purchase_quantity)){
-                var newQuantity =  parseInt(quantity) - parseInt(purchase_quantity);
-                var query = "UPDATE products SET ? WHERE ?";
-                connection.query(query, [{stock_quantity: newQuantity, product_sales: product_sales}, {item_id: answer.item_id}], function(err, res){
-                    //console.log(res);
-                    if (err) throw err;
-                    console.log("Total cost of purchase is " + (parseFloat(unitPrice) * parseFloat(purchase_quantity)) + "\nYour item should arrive in 2 business days!\n\n")
+                if(parseInt(quantity) >= parseInt(purchase_quantity)){
+                    var newQuantity =  parseInt(quantity) - parseInt(purchase_quantity);
+                    var query = "UPDATE products SET ? WHERE ?";
+                    connection.query(query, [{stock_quantity: newQuantity, product_sales: product_sales}, {item_id: answer.item_id}], function(err, res){
+                        //console.log(res);
+                        if (err) throw err;
+                        console.log("\nTotal cost of purchase is ".green + "$" + (parseFloat(unitPrice) * parseFloat(purchase_quantity)))
+                        console.log("Your item should arrive in 2 business days!\n\n".green)
+                        morePurchase();
+                    })
+                }else {
+                    console.log("\nInsufficient quantity instock\n".red);
                     morePurchase();
-                })
-            }else {
-                (console.log("Insufficient quantity instock"));
-                morePurchase();
+                }
             }
         })
+    }
         
     })
 }
@@ -97,7 +108,8 @@ function morePurchase(){
         if(answer.yes){
             promptCustomer()
         }else{
-            console.log("Thank you for using Bamazon, goodbye!\n");
+            console.log("\nThank you for using Bamazon, the worlds best online shoping Mall!".green)
+            console.log("Good bye!\n".green)
             connection.end();
         }
     })
